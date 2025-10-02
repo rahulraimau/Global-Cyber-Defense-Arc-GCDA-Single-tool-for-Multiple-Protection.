@@ -1,133 +1,400 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GCDA Professional Dashboard</title>
-<!-- Google Fonts -->
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>GCDA Professional Dashboard (Integrated)</title>
 <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
-<!-- Chart.js CDN -->
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-    * { box-sizing: border-box; margin:0; padding:0; }
-    body { font-family: 'Roboto', sans-serif; display:flex; min-height:100vh; background:#f4f6f8; }
-    .sidebar { width:220px; background:#1e2a38; color:white; display:flex; flex-direction:column; padding-top:20px; position:fixed; height:100%; }
-    .sidebar h2 { text-align:center; margin-bottom:30px; font-size:1.5rem; }
-    .sidebar a { padding:15px 20px; color:white; text-decoration:none; display:block; transition:0.3s; cursor:pointer; }
-    .sidebar a:hover, .sidebar a.active { background:#0f75d1; }
-    .main-content { margin-left:220px; padding:20px 30px; flex:1; }
-    header { background:#1e90ff; color:white; padding:15px 20px; border-radius:8px; margin-bottom:20px; }
-    section { background:white; padding:20px; border-radius:8px; margin-bottom:20px; box-shadow:0 4px 12px rgba(0,0,0,0.05); display:none; }
-    section.active { display:block; }
-    h3 { margin-bottom:15px; color:#1e2a38; }
-    .card-container { display:flex; gap:20px; flex-wrap:wrap; }
-    .card { background:#1e90ff; color:white; padding:20px; border-radius:8px; flex:1; min-width:150px; text-align:center; cursor:pointer; transition:0.3s; }
-    .card:hover { background:#0f75d1; }
-    table { width:100%; border-collapse: collapse; margin-top:15px; }
-    table th, table td { border:1px solid #ddd; padding:8px; text-align:left; }
-    table th { background:#1e90ff; color:white; }
-    .severity-Low { color: green; font-weight:bold; }
-    .severity-Medium { color: orange; font-weight:bold; }
-    .severity-High { color: red; font-weight:bold; }
-    .severity-Critical { color: darkred; font-weight:bold; }
-    #notifications { max-height:150px; overflow-y:auto; margin-top:10px; border:1px solid #ddd; padding:10px; background:#fafafa; border-radius:5px; }
-    .notification { margin-bottom:5px; padding:5px; border-radius:4px; font-weight:bold; }
-    .notification.Low { background:#d4edda; color:#155724; }
-    .notification.Medium { background:#fff3cd; color:#856404; }
-    .notification.High { background:#f8d7da; color:#721c24; }
-    .notification.Critical { background:#721c24; color:white; }
+  *{box-sizing:border-box;margin:0;padding:0} body{font-family:'Roboto',sans-serif;display:flex;min-height:100vh;background:#f4f6f8}
+  .sidebar{width:220px;background:#1e2a38;color:white;display:flex;flex-direction:column;padding-top:20px;position:fixed;height:100%}
+  .sidebar h2{text-align:center;margin-bottom:20px;font-size:1.5rem}
+  .sidebar a{padding:12px 18px;color:white;text-decoration:none;display:block;transition:0.25s;cursor:pointer}
+  .sidebar a:hover,.sidebar a.active{background:#0f75d1}
+  .main-content{margin-left:220px;padding:20px 28px;flex:1}
+  header{background:#1e90ff;color:white;padding:12px 18px;border-radius:8px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center}
+  .auth-controls button{margin-left:8px;padding:8px 12px;border-radius:6px;border:none;cursor:pointer}
+  section{background:white;padding:18px;border-radius:8px;margin-bottom:16px;box-shadow:0 4px 12px rgba(0,0,0,0.05);display:none}
+  section.active{display:block}
+  h3{margin-bottom:12px;color:#1e2a38}
+  .card-container{display:flex;gap:14px;flex-wrap:wrap}
+  .card{background:#1e90ff;color:white;padding:16px;border-radius:8px;flex:1;min-width:150px;text-align:center;cursor:pointer;transition:0.2s}
+  .card:hover{background:#0f75d1}
+  table{width:100%;border-collapse:collapse;margin-top:14px}
+  table th,table td{border:1px solid #ddd;padding:8px;text-align:left}
+  table th{background:#1e90ff;color:white}
+  .severity-Low{color:green;font-weight:700}
+  .severity-Medium{color:orange;font-weight:700}
+  .severity-High{color:red;font-weight:700}
+  .severity-Critical{color:darkred;font-weight:700}
+  #notifications{max-height:150px;overflow-y:auto;margin-top:10px;border:1px solid #ddd;padding:10px;background:#fafafa;border-radius:5px}
+  .notification{margin-bottom:6px;padding:6px;border-radius:4px;font-weight:600}
+  .notification.Low{background:#d4edda;color:#155724}
+  .notification.Medium{background:#fff3cd;color:#856404}
+  .notification.High{background:#f8d7da;color:#721c24}
+  .notification.Critical{background:#721c24;color:white}
+  .small{font-size:0.85rem;color:#666;margin-top:6px}
+  .top-row{display:flex;gap:12px;align-items:center}
+  .token-badge{background:#fff;border:1px solid #ddd;padding:6px 10px;border-radius:6px;font-weight:600}
 </style>
 </head>
 <body>
-<div class="sidebar">
+  <div class="sidebar">
     <h2>GCDA</h2>
-    <a class="active" onclick="showSection('dashboard')">Dashboard</a>
-    <a onclick="showSection('siem')">SIEM Module</a>
-    <a onclick="showSection('edr')">EDR/XDR Module</a>
-    <a onclick="showSection('grc')">GRC Module</a>
-    <a onclick="showSection('reports')">Reports</a>
-</div>
-<div class="main-content">
-    <header><h1>Global Cyber Defense Arc</h1></header>
-    <section id="dashboard" class="active"><h3>Dashboard Overview</h3><canvas id="overviewChart" height="150"></canvas></section>
+    <a class="active" onclick="showSection('dashboard', event)">Dashboard</a>
+    <a onclick="showSection('siem', event)">SIEM Module</a>
+    <a onclick="showSection('edr', event)">EDR/XDR Module</a>
+    <a onclick="showSection('grc', event)">GRC Module</a>
+    <a onclick="showSection('reports', event)">Reports</a>
+    <div style="flex:1"></div>
+    <div style="padding:12px;color:#cbd5e1;font-size:0.85rem">Version: 1.0 • GNCIPL</div>
+  </div>
+
+  <div class="main-content">
+    <header>
+      <div>
+        <h1 style="margin:0;font-size:1.2rem">Global Cyber Defense Arc</h1>
+        <div class="small">Unified Dashboard • SIEM • EDR • GRC • Vulnerability</div>
+      </div>
+
+      <div style="display:flex;align-items:center">
+        <div id="userInfo" class="token-badge">Not logged in</div>
+        <div class="auth-controls" style="margin-left:12px">
+          <button id="btnLoginAuth0">Login (Auth0)</button>
+          <button id="btnLoginOkta">Login (Okta)</button>
+          <button id="btnLogout" style="display:none">Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <section id="dashboard" class="active">
+      <h3>Dashboard Overview</h3>
+      <div class="top-row" style="align-items:flex-end;">
+        <canvas id="overviewChart" height="140" style="flex:1"></canvas>
+        <div style="width:320px;margin-left:14px">
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <div class="card" onclick="triggerManualOverviewRefresh()" style="padding:10px;min-width:120px">Refresh Overview</div>
+            <div class="card" onclick="downloadReport()" style="padding:10px;min-width:120px">Download Snapshot</div>
+          </div>
+          <div class="small">Realtime events (last 60s)</div>
+          <div id="overviewSummary" class="small" style="margin-top:8px">No data yet</div>
+        </div>
+      </div>
+    </section>
+
     <section id="siem">
-        <h3>SIEM Module Logs</h3>
-        <div class="card-container">
-            <div class="card" onclick="alert('Running Real-Time SIEM Scan')">Run SIEM Scan</div>
-            <div class="card" onclick="alert('Exporting SIEM Logs')">Export Logs</div>
-        </div>
-        <table>
-            <thead><tr><th>Timestamp</th><th>Event</th><th>Severity</th></tr></thead>
-            <tbody id="siemTable"></tbody>
-        </table>
-        <h4>Live Notifications</h4><div id="notifications"></div>
+      <h3>SIEM Module Logs</h3>
+      <div class="card-container">
+        <div class="card" onclick="runSiemScan()">Run SIEM Scan</div>
+        <div class="card" onclick="exportSiemLogs()">Export Logs</div>
+      </div>
+
+      <table>
+        <thead><tr><th style="width:160px">Timestamp</th><th>Event</th><th style="width:120px">Severity</th></tr></thead>
+        <tbody id="siemTable"></tbody>
+      </table>
+
+      <h4 style="margin-top:12px">Live Notifications</h4>
+      <div id="notifications"></div>
     </section>
+
     <section id="edr">
-        <h3>EDR/XDR Module</h3>
-        <div class="card-container">
-            <div class="card" onclick="alert('Running Endpoint Scan')">Scan Endpoint</div>
-            <div class="card" onclick="alert('Quarantining Threats')">Quarantine Threats</div>
-        </div>
-        <canvas id="edrChart" height="150"></canvas>
+      <h3>EDR/XDR Module</h3>
+      <div class="card-container">
+        <div class="card" onclick="runEndpointScan()">Scan Endpoint</div>
+        <div class="card" onclick="quarantineThreats()">Quarantine Threats</div>
+      </div>
+      <canvas id="edrChart" height="140" style="margin-top:12px"></canvas>
     </section>
+
     <section id="grc">
-        <h3>GRC Module</h3>
-        <div class="card-container">
-            <div class="card" onclick="alert('Opening Risk Dashboard')">Risk Dashboard</div>
-            <div class="card" onclick="alert('Checking Compliance')">Compliance Check</div>
-            <div class="card" onclick="alert('Generating Policy Report')">Policy Report</div>
-        </div>
+      <h3>GRC Module</h3>
+      <div class="card-container">
+        <div class="card" onclick="openRiskDashboard()">Risk Dashboard</div>
+        <div class="card" onclick="checkCompliance()">Compliance Check</div>
+        <div class="card" onclick="generatePolicyReport()">Policy Report</div>
+      </div>
     </section>
+
     <section id="reports">
-        <h3>Reports</h3>
-        <button onclick="alert('Generating Overall GCDA Report')">Generate Report</button>
+      <h3>Reports</h3>
+      <button onclick="generateOverallReport()">Generate Overall GCDA Report</button>
     </section>
-</div>
+  </div>
+
 <script>
-function showSection(sectionId){
-    const sections=document.querySelectorAll('section');sections.forEach(s=>s.classList.remove('active'));
-    document.getElementById(sectionId).classList.add('active');
-    const links=document.querySelectorAll('.sidebar a');links.forEach(link=>link.classList.remove('active'));
-    event.target.classList.add('active');
+/*
+  Configuration - REPLACE the placeholders below with real values.
+  - API_BASE: your backend API; keep trailing /api if your routes live under that path.
+  - AUTH0_CLIENT_ID/AUTH0_DOMAIN, OKTA_CLIENT_ID/OKTA_ISSUER: replace with actual values.
+*/
+const API_BASE = 'http://localhost:5000/api'; // <- change to your backend URL
+const AUTH0_CLIENT_ID = '';                   // e.g. 'abc123...'
+const AUTH0_DOMAIN = '';                      // e.g. 'dev-xxx.us.auth0.com'
+const OKTA_CLIENT_ID = '';                    // e.g. '0oa...'
+const OKTA_ISSUER = '';                       // e.g. 'https://dev-xxxxx.okta.com/oauth2/default'
+const REDIRECT_URI = window.location.origin + window.location.pathname; // redirect back to this page
+
+/* ---------- Auth helpers ---------- */
+function saveToken(token) {
+  localStorage.setItem('gcda_token', token);
+  updateAuthUI();
 }
-const siemEvents=[
-    {event:"Login Success",severity:"Low"},
-    {event:"Failed SSH Attempt",severity:"High"},
-    {event:"Malware Detected",severity:"Critical"},
-    {event:"Unauthorized Access",severity:"High"},
-    {event:"Firewall Alert",severity:"Medium"}
-];
-function updateSiemLogs(){
-    const table=document.getElementById('siemTable');const notifications=document.getElementById('notifications');
-    const now=new Date();const timestamp=now.toLocaleTimeString();
-    const randomEvent=siemEvents[Math.floor(Math.random()*siemEvents.length)];
-    const row=`<tr><td>${timestamp}</td><td>${randomEvent.event}</td><td class="severity-${randomEvent.severity}">${randomEvent.severity}</td></tr>`;
-    table.innerHTML=row+table.innerHTML;
-    if(table.rows.length>10)table.deleteRow(-1);
-    const notif=document.createElement('div');notif.className=`notification ${randomEvent.severity}`;
-    notif.textContent=`[${timestamp}] ${randomEvent.event} - ${randomEvent.severity}`;
+function getToken(){ return localStorage.getItem('gcda_token'); }
+function clearToken(){ localStorage.removeItem('gcda_token'); updateAuthUI(); }
+function updateAuthUI(){
+  const token = getToken();
+  const ui = document.getElementById('userInfo');
+  if(token){
+    ui.textContent = 'Authenticated (token)';
+    document.getElementById('btnLogout').style.display = 'inline-block';
+  } else {
+    ui.textContent = 'Not logged in';
+    document.getElementById('btnLogout').style.display = 'none';
+  }
+}
+
+// Simple OAuth redirect flows - you must configure allowed callback URL in Auth0/Okta app.
+// These use implicit-like redirect for quick testing (recommended: implement auth code flow on backend in production).
+document.getElementById('btnLoginAuth0').addEventListener('click', () => {
+  if(!AUTH0_CLIENT_ID || !AUTH0_DOMAIN){ alert('Set AUTH0_CLIENT_ID and AUTH0_DOMAIN in the HTML config.'); return; }
+  const url = `https://${AUTH0_DOMAIN}/authorize?` + new URLSearchParams({
+    client_id: AUTH0_CLIENT_ID,
+    response_type: 'token',       // quick testing only
+    scope: 'openid profile email',
+    redirect_uri: REDIRECT_URI,
+    audience: `${window.location.origin}/api` // adjust audience as required
+  }).toString();
+  window.location.href = url;
+});
+
+document.getElementById('btnLoginOkta').addEventListener('click', () => {
+  if(!OKTA_CLIENT_ID || !OKTA_ISSUER){ alert('Set OKTA_CLIENT_ID and OKTA_ISSUER in the HTML config.'); return; }
+  const issuerBase = OKTA_ISSUER.replace(/\/oauth2\/.*$/,''); // derive base if needed
+  const url = `${OKTA_ISSUER}/v1/authorize?` + new URLSearchParams({
+    client_id: OKTA_CLIENT_ID,
+    response_type: 'token',
+    scope: 'openid profile email',
+    redirect_uri: REDIRECT_URI,
+    state: 'gcda_state'
+  }).toString();
+  window.location.href = url;
+});
+
+document.getElementById('btnLogout').addEventListener('click', () => { clearToken(); alert('Logged out'); });
+
+/* On page load: if redirected back with access_token in hash (Auth0/Okta implicit), extract and save it */
+(function handleRedirectToken(){
+  const hash = window.location.hash.substring(1);
+  if(!hash) return;
+  const params = Object.fromEntries(new URLSearchParams(hash));
+  if(params.access_token){
+    saveToken(params.access_token);
+    // remove token from URL to avoid leakage in history
+    history.replaceState(null, '', window.location.pathname);
+  }
+})();
+
+/* ---------- API helper with token ---------- */
+async function apiFetch(path, options = {}) {
+  const url = API_BASE + path;
+  const headers = options.headers || {};
+  const token = getToken();
+  if(token) headers['Authorization'] = `Bearer ${token}`;
+  headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+  try {
+    const res = await fetch(url, {...options, headers});
+    if(res.status === 401){ console.warn('Unauthorized; token may be invalid.'); /* optional: clearToken(); */}
+    if(!res.ok) { const txt = await res.text().catch(()=>res.statusText); throw new Error(txt || 'API error'); }
+    return res.json();
+  } catch(err){
+    throw err;
+  }
+}
+
+/* ---------- SIEM / EDR / Overview logic ---------- */
+const siemTable = document.getElementById('siemTable');
+const notifications = document.getElementById('notifications');
+let siemBuffer = [];
+
+/* Try to fetch siem logs from backend; fall back to simulated events on failure */
+async function fetchSiem(){
+  try {
+    const data = await apiFetch('/siem?limit=20'); // backend should implement /siem
+    // expected: [{ timestamp, event, severity }, ...]
+    if(Array.isArray(data)) {
+      siemBuffer = data.slice(0,20);
+      renderSiem();
+      return;
+    }
+    throw new Error('Unexpected SIEM payload');
+  } catch(err){
+    // fallback simulation
+    console.warn('fetchSiem failed, using simulated data:', err.message);
+    generateSimulatedSiem();
+  }
+}
+
+function renderSiem(){
+  siemTable.innerHTML = '';
+  siemBuffer.forEach(item => {
+    const tr = document.createElement('tr');
+    const ts = new Date(item.timestamp).toLocaleString();
+    tr.innerHTML = `<td>${ts}</td><td>${escapeHtml(item.event)}</td><td class="severity-${escapeHtml(item.severity)}">${escapeHtml(item.severity)}</td>`;
+    siemTable.appendChild(tr);
+
+    // notifications list (top 5)
+    const notif = document.createElement('div'); notif.className = `notification ${item.severity}`;
+    notif.textContent = `[${new Date(item.timestamp).toLocaleTimeString()}] ${item.event} - ${item.severity}`;
     notifications.prepend(notif);
-    if(notifications.childNodes.length>5)notifications.removeChild(notifications.lastChild);
+  });
+  // keep notifications short
+  while(notifications.childNodes.length > 6) notifications.removeChild(notifications.lastChild);
 }
-setInterval(updateSiemLogs,5000);updateSiemLogs();
-const ctx=document.getElementById('overviewChart').getContext('2d');
-const overviewChart=new Chart(ctx,{type:'line',data:{labels:Array(10).fill(''),datasets:[{label:'Security Events',data:Array(10).fill(0),borderColor:'#1e90ff',backgroundColor:'rgba(30,144,255,0.2)',fill:true,tension:0.3} ]},options:{responsive:true,animation:false}});
-function updateOverviewChart(){
-    const now=new Date().toLocaleTimeString();
-    overviewChart.data.labels.push(now);
-    overviewChart.data.labels.shift();
+
+/* EDR chart */
+const edrCtx = document.getElementById('edrChart').getContext('2d');
+const edrChart = new Chart(edrCtx, {
+  type: 'bar',
+  data: { labels:['Endpoint1','Endpoint2','Endpoint3','Endpoint4'], datasets:[{label:'Threats Detected',data:[0,0,0,0],backgroundColor:'#1e90ff'}]},
+  options: { responsive:true, animation:false }
+});
+
+async function fetchEdr(){
+  try {
+    const data = await apiFetch('/edr/status'); // backend: /edr/status
+    // expected format: { endpoints:[{name,threats}, ...] }
+    if(data && Array.isArray(data.endpoints)) {
+      edrChart.data.labels = data.endpoints.map(e=>e.name);
+      edrChart.data.datasets[0].data = data.endpoints.map(e=>e.threats||0);
+      edrChart.update();
+      return;
+    }
+    throw new Error('Unexpected EDR payload');
+  } catch(err){
+    console.warn('fetchEdr failed, using simulated data:', err.message);
+    // simulate
+    edrChart.data.datasets[0].data = edrChart.data.datasets[0].data.map(()=>Math.floor(Math.random()*6));
+    edrChart.update();
+  }
+}
+
+/* Overview chart */
+const overviewCtx = document.getElementById('overviewChart').getContext('2d');
+const overviewChart = new Chart(overviewCtx, {
+  type:'line',
+  data:{ labels:Array.from({length:10},(_,i)=>''), datasets:[{label:'Security Events', data:Array(10).fill(0), borderColor:'#1e90ff', backgroundColor:'rgba(30,144,255,0.15)', fill:true, tension:0.3}]},
+  options:{responsive:true, animation:false}
+});
+
+async function fetchOverview(){
+  try {
+    const data = await apiFetch('/overview'); // backend: /overview
+    // expected: { labels:[...], values:[...] } OR { timeseries: [{ts,val}, ...] }
+    if(data && Array.isArray(data.values)) {
+      overviewChart.data.labels = data.labels || overviewChart.data.labels;
+      overviewChart.data.datasets[0].data = data.values;
+      overviewChart.update();
+      document.getElementById('overviewSummary').textContent = `Events: ${data.values.reduce((a,b)=>a+b,0)} • Updated: ${new Date().toLocaleTimeString()}`;
+      return;
+    }
+    if(data && Array.isArray(data.timeseries)) {
+      overviewChart.data.labels = data.timeseries.map(t=> new Date(t.ts).toLocaleTimeString());
+      overviewChart.data.datasets[0].data = data.timeseries.map(t=>t.val);
+      overviewChart.update();
+      document.getElementById('overviewSummary').textContent = `Events: ${data.timeseries.reduce((a,b)=>a.val+a,0)} • Updated: ${new Date().toLocaleTimeString()}`;
+      return;
+    }
+    throw new Error('Unexpected overview payload');
+  } catch(err){
+    // fallback
+    console.warn('fetchOverview failed, falling back:', err.message);
     overviewChart.data.datasets[0].data.push(Math.floor(Math.random()*20));
     overviewChart.data.datasets[0].data.shift();
+    const now = new Date().toLocaleTimeString();
+    overviewChart.data.labels.push(now);
+    overviewChart.data.labels.shift();
     overviewChart.update();
+    document.getElementById('overviewSummary').textContent = `Simulated events • Updated: ${now}`;
+  }
 }
-setInterval(updateOverviewChart,5000);
-const ctxEdr=document.getElementById('edrChart').getContext('2d');
-const edrChart=new Chart(ctxEdr,{type:'bar',data:{labels:['Endpoint1','Endpoint2','Endpoint3','Endpoint4'],datasets:[{label:'Threats Detected',data:[0,0,0,0],backgroundColor:'#1e90ff'}]},options:{responsive:true,animation:false}});
-function updateEdrChart(){
-    edrChart.data.datasets[0].data=edrChart.data.datasets[0].data.map(()=>Math.floor(Math.random()*5));
-    edrChart.update();
+
+/* ---------- Simulated fallback events ---------- */
+const fallbackEvents = [
+  {event:'Login Success', severity:'Low'},
+  {event:'Failed SSH Attempt', severity:'High'},
+  {event:'Malware Detected', severity:'Critical'},
+  {event:'Unauthorized Access', severity:'High'},
+  {event:'Firewall Alert', severity:'Medium'}
+];
+
+function generateSimulatedSiem(){
+  const now = new Date().toISOString();
+  const ev = fallbackEvents[Math.floor(Math.random()*fallbackEvents.length)];
+  siemBuffer.unshift({ timestamp: now, event: ev.event, severity: ev.severity });
+  siemBuffer = siemBuffer.slice(0,20);
+  renderSiem();
 }
-setInterval(updateEdrChart,5000);
+
+/* ---------- UI action handlers (call backend where appropriate) ---------- */
+async function runSiemScan(){
+  try {
+    await apiFetch('/siem/scan', { method: 'POST' }); // backend should expose endpoint
+    alert('SIEM scan requested');
+  } catch(err){ alert('Failed to trigger SIEM scan: ' + err.message); }
+}
+
+async function exportSiemLogs(){
+  try {
+    const blob = await apiFetch('/siem/export'); // ensure backend returns file or URL
+    alert('Export requested; check server or download link');
+  } catch(err){ alert('Export failed: ' + err.message); }
+}
+
+async function runEndpointScan(){ try { await apiFetch('/edr/scan', { method:'POST' }); alert('Endpoint scan requested'); } catch(err){ alert(err.message); } }
+async function quarantineThreats(){ try { await apiFetch('/edr/quarantine', { method:'POST' }); alert('Quarantine requested'); } catch(err){ alert(err.message); } }
+function openRiskDashboard(){ alert('Open risk dashboard (implement route)'); }
+function checkCompliance(){ alert('Compliance check requested'); }
+function generatePolicyReport(){ alert('Policy report generation requested'); }
+function generateOverallReport(){ alert('Requesting overall report...'); apiFetch('/reports/generate',{ method:'POST' }).then(()=>alert('Report request queued')).catch(err=>alert('Report failed: '+err.message)); }
+function downloadReport(){ alert('Download snapshot - implement server snapshot endpoint if required'); }
+
+/* ---------- utility & bootstrap ---------- */
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+function showSection(id, evt){
+  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.sidebar a').forEach(a=>a.classList.remove('active'));
+  if(evt && evt.target) evt.target.classList.add('active');
+}
+
+/* Periodic fetchers */
+async function bootstrap(){
+  updateAuthUI();
+  try{ await fetchSiem(); } catch(e){}
+  await fetchEdr();
+  await fetchOverview();
+  // poll every 8 seconds for SIEM/EDR and 10s for overview
+  setInterval(fetchSiem, 8000);
+  setInterval(fetchEdr, 10000);
+  setInterval(fetchOverview, 10000);
+}
+bootstrap();
+
+/* If you want a manual refresh button for overview */
+function triggerManualOverviewRefresh(){ fetchOverview(); }
+
+/* If you want to validate token with backend */
+async function verifyTokenWithServer(){
+  try {
+    const r = await apiFetch('/auth/verify'); // backend endpoint to verify token
+    console.log('verifyTokenWithServer:', r);
+  } catch(err){
+    console.warn('Token verification failed:', err.message);
+  }
+}
 </script>
 </body>
 </html>
