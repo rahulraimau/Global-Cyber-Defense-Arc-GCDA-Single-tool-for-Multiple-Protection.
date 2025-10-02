@@ -1,7 +1,7 @@
 Global Cyber Defense Arc (GCDA)
 
 Single Tool for Multiple Protection
-https://github.com/rahulraimau/cybersecurity.git(#FOR INTEGRATION)
+https://github.com/rahulraimau/cybersecurity.git  (FOR INTEGRATION)
 Overview
 
 The Global Cyber Defense Arc (GCDA) is a secure, modular, and scalable cybersecurity dashboard. It enables analysts and GRC professionals to monitor, visualize, and manage:
