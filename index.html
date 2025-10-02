@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
 <!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <style>
     * { box-sizing: border-box; margin:0; padding:0; }
     body { font-family: 'Roboto', sans-serif; display:flex; min-height:100vh; background:#f4f6f8; }
@@ -26,6 +27,17 @@
     table { width:100%; border-collapse: collapse; margin-top:15px; }
     table th, table td { border:1px solid #ddd; padding:8px; text-align:left; }
     table th { background:#1e90ff; color:white; }
+    .severity-Low { color: green; font-weight:bold; }
+    .severity-Medium { color: orange; font-weight:bold; }
+    .severity-High { color: red; font-weight:bold; }
+    .severity-Critical { color: darkred; font-weight:bold; }
+    #notifications { max-height:150px; overflow-y:auto; margin-top:10px; border:1px solid #ddd; padding:10px; background:#fafafa; border-radius:5px; }
+    .notification { margin-bottom:5px; padding:5px; border-radius:4px; font-weight:bold; }
+    .notification.Low { background:#d4edda; color:#155724; }
+    .notification.Medium { background:#fff3cd; color:#856404; }
+    .notification.High { background:#f8d7da; color:#721c24; }
+    .notification.Critical { background:#721c24; color:white; }
+    #uploadedLink a { color: #1e90ff; text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -35,16 +47,18 @@
     <a onclick="showSection('siem')">SIEM Module</a>
     <a onclick="showSection('edr')">EDR/XDR Module</a>
     <a onclick="showSection('grc')">GRC Module</a>
-    <a onclick="showSection('reports')">Reports</a>
+    <a onclick="showSection('reports')">Reports & Uploads</a>
 </div>
 <div class="main-content">
     <header><h1>Global Cyber Defense Arc</h1></header>
 
+    <!-- Dashboard Overview -->
     <section id="dashboard" class="active">
         <h3>Dashboard Overview</h3>
         <canvas id="overviewChart" height="150"></canvas>
     </section>
 
+    <!-- SIEM Module -->
     <section id="siem">
         <h3>SIEM Module Logs</h3>
         <div class="card-container">
@@ -55,8 +69,10 @@
             <thead><tr><th>Timestamp</th><th>Event</th><th>Severity</th></tr></thead>
             <tbody id="siemTable"></tbody>
         </table>
+        <h4>Live Notifications</h4><div id="notifications"></div>
     </section>
 
+    <!-- EDR/XDR Module -->
     <section id="edr">
         <h3>EDR/XDR Module</h3>
         <div class="card-container">
@@ -66,6 +82,7 @@
         <canvas id="edrChart" height="150"></canvas>
     </section>
 
+    <!-- GRC Module -->
     <section id="grc">
         <h3>GRC Module</h3>
         <div class="card-container">
@@ -75,21 +92,33 @@
         </div>
     </section>
 
+    <!-- Reports & Upload Module -->
     <section id="reports">
-        <h3>Reports</h3>
-        <button onclick="alert('Generating Overall GCDA Report')">Generate Report</button>
+        <h3>Reports & Uploads</h3>
+        <div class="card-container">
+            <div class="card" onclick="alert('Generating Overall GCDA Report')">Generate Report</div>
+            <div class="card">
+                <input type="file" id="fileInput" style="display:none;" />
+                <span onclick="document.getElementById('fileInput').click()">Upload Report</span>
+            </div>
+        </div>
+        <div id="uploadStatus" style="margin-top:10px; color:#1e2a38; font-weight:bold;"></div>
+        <div id="uploadedLink" style="margin-top:5px;"></div>
     </section>
 </div>
 
 <script>
+// Sidebar navigation
 function showSection(sectionId){
-    const sections=document.querySelectorAll('section');sections.forEach(s=>s.classList.remove('active'));
+    const sections=document.querySelectorAll('section');
+    sections.forEach(s=>s.classList.remove('active'));
     document.getElementById(sectionId).classList.add('active');
-    const links=document.querySelectorAll('.sidebar a');links.forEach(link=>link.classList.remove('active'));
+    const links=document.querySelectorAll('.sidebar a');
+    links.forEach(link=>link.classList.remove('active'));
     event.target.classList.add('active');
 }
 
-// Dummy SIEM Events for table
+// SIEM simulation
 const siemEvents=[
     {event:"Login Success",severity:"Low"},
     {event:"Failed SSH Attempt",severity:"High"},
@@ -97,37 +126,67 @@ const siemEvents=[
     {event:"Unauthorized Access",severity:"High"},
     {event:"Firewall Alert",severity:"Medium"}
 ];
-
 function updateSiemLogs(){
     const table=document.getElementById('siemTable');
+    const notifications=document.getElementById('notifications');
     const now=new Date();const timestamp=now.toLocaleTimeString();
     const randomEvent=siemEvents[Math.floor(Math.random()*siemEvents.length)];
-    const row=`<tr><td>${timestamp}</td><td>${randomEvent.event}</td><td>${randomEvent.severity}</td></tr>`;
+    const row=`<tr><td>${timestamp}</td><td>${randomEvent.event}</td><td class="severity-${randomEvent.severity}">${randomEvent.severity}</td></tr>`;
     table.innerHTML=row+table.innerHTML;
     if(table.rows.length>10)table.deleteRow(-1);
+    const notif=document.createElement('div');notif.className=`notification ${randomEvent.severity}`;
+    notif.textContent=`[${timestamp}] ${randomEvent.event} - ${randomEvent.severity}`;
+    notifications.prepend(notif);
+    if(notifications.childNodes.length>5)notifications.removeChild(notifications.lastChild);
 }
-setInterval(updateSiemLogs,5000);updateSiemLogs();
+setInterval(updateSiemLogs,5000);
+updateSiemLogs();
 
 // Overview Chart
 const ctx=document.getElementById('overviewChart').getContext('2d');
-const overviewChart=new Chart(ctx,{type:'line',data:{labels:Array(10).fill(''),datasets:[{label:'Security Events',data:Array(10).fill(0),borderColor:'#1e90ff',backgroundColor:'rgba(30,144,255,0.2)',fill:true,tension:0.3} ]},options:{responsive:true,animation:false}});
+const overviewChart=new Chart(ctx,{
+    type:'line',
+    data:{labels:Array(10).fill(''),datasets:[{label:'Security Events',data:Array(10).fill(0),borderColor:'#1e90ff',backgroundColor:'rgba(30,144,255,0.2)',fill:true,tension:0.3}]},
+    options:{responsive:true,animation:false}
+});
 function updateOverviewChart(){
+    const now=new Date().toLocaleTimeString();
+    overviewChart.data.labels.push(now);
+    overviewChart.data.labels.shift();
     overviewChart.data.datasets[0].data.push(Math.floor(Math.random()*20));
     overviewChart.data.datasets[0].data.shift();
-    overviewChart.data.labels.push('');
-    overviewChart.data.labels.shift();
     overviewChart.update();
 }
 setInterval(updateOverviewChart,5000);
 
 // EDR Chart
 const ctxEdr=document.getElementById('edrChart').getContext('2d');
-const edrChart=new Chart(ctxEdr,{type:'bar',data:{labels:['Endpoint1','Endpoint2','Endpoint3','Endpoint4'],datasets:[{label:'Threats Detected',data:[0,0,0,0],backgroundColor:'#1e90ff'}]},options:{responsive:true,animation:false}});
+const edrChart=new Chart(ctxEdr,{
+    type:'bar',
+    data:{labels:['Endpoint1','Endpoint2','Endpoint3','Endpoint4'],datasets:[{label:'Threats Detected',data:[0,0,0,0],backgroundColor:'#1e90ff'}]},
+    options:{responsive:true,animation:false}
+});
 function updateEdrChart(){
     edrChart.data.datasets[0].data=edrChart.data.datasets[0].data.map(()=>Math.floor(Math.random()*5));
     edrChart.update();
 }
 setInterval(updateEdrChart,5000);
-</script>
-</body>
-</html>
+
+// Cloudinary Upload
+const fileInput = document.getElementById('fileInput');
+const uploadStatus = document.getElementById('uploadStatus');
+const uploadedLink = document.getElementById('uploadedLink');
+
+fileInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    uploadStatus.textContent = 'Uploading...';
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+        const res = await axios.post('http://localhost:5000/api/upload/file', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        uploadStatus.textContent = 'Upload successful!';
+        uploadedLink.innerHTML = `<a href="${res.data.url}" target="_
+
